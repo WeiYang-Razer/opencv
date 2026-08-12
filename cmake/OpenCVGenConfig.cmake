@@ -116,6 +116,10 @@ function(ocv_gen_config TMP_DIR NESTED_PATH ROOT_NAME)
 
   configure_file("${OpenCV_SOURCE_DIR}/cmake/templates/OpenCVConfig.cmake.in" "${__tmp_nested}/OpenCVConfig.cmake" @ONLY)
   install(EXPORT OpenCVModules DESTINATION "${__install_nested}" FILE OpenCVModules.cmake COMPONENT dev)
+  # Same export set, emitted a second time under the *Targets-<config>.cmake name that
+  # wyvrnpm's per-config publish slicing requires. Additive: OpenCVConfig.cmake still
+  # includes OpenCVModules.cmake, so consumers are unaffected.
+  install(EXPORT OpenCVModules DESTINATION "${__install_nested}" FILE OpenCVTargets.cmake COMPONENT dev)
   install(FILES
       "${TMP_DIR}/OpenCVConfig-version.cmake"
       "${__tmp_nested}/OpenCVConfig.cmake"

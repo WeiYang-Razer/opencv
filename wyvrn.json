@@ -1,6 +1,6 @@
 {
   "name": "opencv",
-  "version": "4.15.0.0",
+  "version": "4.15.0.1",
   "schemaVersion": 2,
   "kind": "DynamicLib",
   "dependencies": {
@@ -9,7 +9,7 @@
     "libpng": "^1.6.58.0",
     "protobuf": "^34.1.0.0",
     "tiff": "^4.7.2.0",
-    "libwebp": { "version": "^1.6.0.0", "options": { "shared": true } },
+    "libwebp": { "version": "^1.6.0.1", "options": { "shared": true } },
     "openjpeg": "^2.5.4.0"
   },
   "build": {

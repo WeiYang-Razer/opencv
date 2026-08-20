@@ -145,12 +145,22 @@ endif()
 
 if(NOT DEFINED OPENCV_MAP_IMPORTED_CONFIG)
   if(CMAKE_GENERATOR MATCHES "Visual Studio" OR MSVC)
-    # OpenCV supports Debug and Release builds only.
-    # But MSVS has 'RelWithDebInfo' 'MinSizeRel' configurations for applications.
-    # By default CMake maps these configuration on the first available (Debug) which is wrong.
-    # Non-Debug build of Application can't be used with OpenCV Debug build (ABI mismatch problem)
-    # Add mapping of RelWithDebInfo and MinSizeRel to Release here
-    set(OPENCV_MAP_IMPORTED_CONFIG "RELWITHDEBINFO=!Release;MINSIZEREL=!Release")
+    # MSVS has 'RelWithDebInfo' and 'MinSizeRel' configurations for applications.
+    # By default CMake maps these onto the first available (Debug) which is wrong:
+    # a non-Debug application can't be used with an OpenCV Debug build (ABI
+    # mismatch). Map them onto Release instead.
+    #
+    # Note the absence of the '!' force flag, which upstream uses here on the
+    # assumption that OpenCV only ever ships Debug and Release. This package
+    # builds and installs all four configurations, and forcing the remap would
+    # point a RelWithDebInfo consumer at opencv_*4150.dll -- which hard-imports
+    # the Release third-party codecs (z.dll, tiff.dll, jpeg62.dll, ...) while
+    # the consumer stages the RelWithDebInfo ones, giving ERROR_MOD_NOT_FOUND
+    # (0x7E) at load. Without '!', ocv_map_imported_config() skips the remap
+    # whenever the requested configuration is actually present, so a
+    # RelWithDebInfo consumer gets opencv_*4150rd.dll and its matching codecs,
+    # and a Debug/Release-only build still falls back to Release as before.
+    set(OPENCV_MAP_IMPORTED_CONFIG "RELWITHDEBINFO=Release;MINSIZEREL=Release")
   endif()
 endif()
 set(__remap_warnings "")

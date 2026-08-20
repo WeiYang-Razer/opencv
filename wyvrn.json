@@ -1,6 +1,6 @@
 {
   "name": "opencv",
-  "version": "4.15.0.2",
+  "version": "4.15.0.3",
   "schemaVersion": 2,
   "kind": "DynamicLib",
   "dependencies": {

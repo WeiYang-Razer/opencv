@@ -1,6 +1,6 @@
 {
   "wyvrnVersion": 2,
-  "generatedAt": "2026-08-19T02:22:00.861Z",
+  "generatedAt": "2026-08-20T01:38:48.207Z",
   "platform": "win_x64",
   "profileName": "default",
   "profile": {
@@ -42,10 +42,10 @@
     },
     "libwebp": {
       "version": "1.6.0.1",
-      "resolvedFrom": "v2",
       "profileHash": "585ebc33be89058b",
       "contentSha256": "1182e2d67b6d8c5ea21b7ea55e99f1c11d9848c4fd3bba11483b508320b401bf",
       "gitSha": "3e2ee380074d678f525cf583b814938bf9c4095e",
+      "resolvedFrom": "v2",
       "options": {
         "shared": true,
         "simd": true,
@@ -73,11 +73,11 @@
       "resolvedFrom": "v2"
     },
     "tiff": {
-      "version": "4.7.2.0",
+      "version": "4.7.2.1",
+      "resolvedFrom": "cached",
       "profileHash": "09b9f7f687c417ba",
-      "contentSha256": "f2b648487a5829d0193522bfd4db40308292aa538574c7ba6f280491b187f85a",
-      "gitSha": "a823f1b1cc6aba7a13723240f5aeaebb6a1236b2",
-      "resolvedFrom": "v2",
+      "contentSha256": "0bf6615b3fb37dc9813c9e378f8b2ebcf4f613210d10e3a35496ee4b43b12ce3",
+      "gitSha": "3999ba4444922d5a7e842cad6f222af06305bf7c",
       "options": {
         "shared": true,
         "zlib": true,
@@ -86,11 +86,11 @@
       }
     },
     "zlib": {
-      "version": "1.3.2.2",
+      "version": "1.3.2.3",
+      "resolvedFrom": "cached",
       "profileHash": "dab578c203d618cb",
-      "contentSha256": "d6cec555df9cf1ebef7aedf9ebec760a662907632669195111a96e93f0a322df",
-      "gitSha": "31790b54d2675ee5ea7e52dbe394325781ad38a8",
-      "resolvedFrom": "v2"
+      "contentSha256": "3ca30e1d1bc8b6c78a81400579a244a265c49e5e1d472d3da0b10b41fcfd2620",
+      "gitSha": "db18a92921f202f209e8dd7131f092ec1dfe07b2"
     },
     "zstd": {
       "version": "1.5.7.1",

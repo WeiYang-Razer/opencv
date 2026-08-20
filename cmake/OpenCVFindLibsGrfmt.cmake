@@ -2,6 +2,58 @@
 #  Detect 3rd-party image IO libraries
 # ----------------------------------------------------------------------------
 
+# Swap a module-mode-found codec for its config-package imported target.
+#
+# CMake's bundled Find modules resolve only two imported locations, DEBUG and
+# RELEASE, so on a multi-config generator RelWithDebInfo and MinSizeRel both map
+# onto RELEASE. A RelWithDebInfo opencv_imgcodecs then hard-imports z.dll and
+# tiff.dll rather than zrd.dll and tiffrd.dll, and a consumer that stages the
+# matching-config codec DLLs hits ERROR_MOD_NOT_FOUND (0x7E) at load time.
+#
+# The codec packages ship config packages whose exported targets carry per-config
+# IMPORTED_IMPLIB, so prefer those for linking. Include directories and header
+# version parsing keep using the module-mode results, which are already correct
+# and are consumed as plain paths.
+#
+# Only meaningful for a shared OpenCV: there the codecs are linked privately into
+# the module DLLs. A static OpenCV would leak the target names into its exported
+# link interface, where consumers cannot resolve them.
+#
+# Runs as a function so the config package's variables stay in function scope --
+# only the imported targets, which are directory-scoped, survive into the caller.
+# Define a codec's config-package targets *before* the matching Find module runs.
+#
+# Only needed when the config package and the Find module use the same imported
+# target name: zlib ships ZLIB::ZLIB and CMake's FindZLIB also creates
+# ZLIB::ZLIB, guarded by "if(NOT TARGET ZLIB::ZLIB)". Whoever gets there first
+# wins permanently, and FindZLIB's version is an UNKNOWN_LIBRARY with only DEBUG
+# and RELEASE locations. Claiming the name from the config package first leaves
+# the module free to fill in include dirs and the version string as usual.
+#
+# The other three codecs need no pre-claim -- their config targets are named
+# differently from the module ones (PNG::png_shared vs PNG::PNG, TIFF::tiff vs
+# TIFF::TIFF, libjpeg-turbo::jpeg vs JPEG::JPEG), so there is nothing to race.
+function(ocv_claim_config_codec_target package)
+  if(NOT BUILD_SHARED_LIBS)
+    return()
+  endif()
+  find_package(${package} CONFIG QUIET)
+endfunction()
+
+function(ocv_prefer_config_codec_target package var_libraries)
+  if(NOT BUILD_SHARED_LIBS)
+    return()
+  endif()
+  find_package(${package} CONFIG QUIET)
+  foreach(_tgt IN LISTS ARGN)
+    if(TARGET ${_tgt})
+      set(${var_libraries} ${_tgt} PARENT_SCOPE)
+      message(STATUS "Linking ${_tgt} from the ${package} config package (per-config imports)")
+      return()
+    endif()
+  endforeach()
+endfunction()
+
 # --- zlib (required) ---
 if(WITH_ZLIB_NG)
   ocv_clear_vars(ZLIB_LIBRARY ZLIB_LIBRARIES ZLIB_INCLUDE_DIR)
@@ -29,7 +81,11 @@ else()
     set(ZLIB_LIBRARY z)
     set(ZLIB_LIBRARIES z)
   else()
+    ocv_claim_config_codec_target(ZLIB)
     find_package(ZLIB "${MIN_VER_ZLIB}")
+    if(ZLIB_FOUND)
+      ocv_prefer_config_codec_target(ZLIB ZLIB_LIBRARIES ZLIB::ZLIB)
+    endif()
   endif()
   if(ANDROID)
     set(CMAKE_FIND_LIBRARY_SUFFIXES ${_zlib_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -84,6 +140,9 @@ if(WITH_JPEG)
       set(JPEG_FOUND TRUE)
     else()
       include(FindJPEG)
+      if(JPEG_FOUND)
+        ocv_prefer_config_codec_target(libjpeg-turbo JPEG_LIBRARIES libjpeg-turbo::jpeg)
+      endif()
     endif()
   endif()
 
@@ -157,6 +216,9 @@ if(WITH_TIFF)
       set(TIFF_FOUND TRUE)
     else()
       include(FindTIFF)
+      if(TIFF_FOUND)
+        ocv_prefer_config_codec_target(tiff TIFF_LIBRARIES TIFF::tiff)
+      endif()
     endif()
     if(TIFF_FOUND)
       ocv_parse_header("${TIFF_INCLUDE_DIR}/tiff.h" TIFF_VERSION_LINES TIFF_VERSION_CLASSIC TIFF_VERSION_BIG TIFF_VERSION TIFF_BIGTIFF_VERSION)
@@ -372,6 +434,9 @@ if(NOT HAVE_SPNG AND WITH_PNG)
   else()
     ocv_clear_internal_cache_vars(PNG_LIBRARY PNG_INCLUDE_DIR PNG_PNG_INCLUDE_DIR)
     find_package(PNG QUIET)
+    if(PNG_FOUND)
+      ocv_prefer_config_codec_target(PNG PNG_LIBRARIES PNG::png_shared)
+    endif()
   endif()
 
   if(NOT PNG_FOUND)
